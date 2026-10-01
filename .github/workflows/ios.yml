@@ -1,0 +1,47 @@
+name: Verify and build iPhone app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Flutter SDK
+        run: |
+          git clone --depth 1 --branch 3.47.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter --version
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test --reporter expanded
+      - name: Build iOS simulator app
+        run: flutter build ios --simulator --debug
+      - name: Build native iPhone release
+        run: flutter build ios --release --no-codesign
+      - name: Package IPA for personal signing
+        run: |
+          mkdir -p build/personal/Payload
+          cp -R build/ios/iphoneos/Runner.app build/personal/Payload/
+          cd build/personal
+          zip -qry ../PieceFinder-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PieceFinder-personal-signing
+          path: build/PieceFinder-unsigned.ipa
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-previews
+          path: .artifacts/*.png
+          include-hidden-files: true
