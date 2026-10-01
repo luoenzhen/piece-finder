@@ -21,11 +21,19 @@ jobs:
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter --version
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze
       - run: flutter test --reporter expanded
       - name: Build iOS simulator app
         run: flutter build ios --simulator --debug
+      - name: Boot an iPhone simulator
+        run: |
+          device=$(xcrun simctl list devices available --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for k,vs in d["devices"].items() if "iOS" in k for v in vs if v["name"].startswith("iPhone")))')
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          echo "IOS_SIMULATOR_ID=$device" >> "$GITHUB_ENV"
+      - name: Test native app on iPhone simulator
+        run: flutter test integration_test/app_test.dart -d "$IOS_SIMULATOR_ID" --reporter expanded
       - name: Build native iPhone release
         run: flutter build ios --release --no-codesign
       - name: Package IPA for personal signing
