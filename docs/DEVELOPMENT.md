@@ -29,3 +29,9 @@ Use current source and test output for implementation status. The PRD is the sco
 ## Updated product decision (2026-10-02)
 
 The user explicitly removed the five-scan allowance: scanning is unlimited, without a subscription gate. This supersedes quota and monetization requirements in the original PRD and earlier sequence above. Existing quota records are ignored; puzzle and scan history data remain intact.
+
+## Native calibration branch
+
+`codex/native-calibration` introduces OpenCV 4.13 through the pinned dartcv4 2.3.1 FFI bindings for perspective transformation. Only imgproc and imgcodecs modules are requested. The browser keeps the Dart implementation; piece matching is still the Dart prototype. This is the first native processing stage, not the completed native matching engine or zero-copy camera pipeline.
+
+The simulator integration test compares a skewed native warp with the reference output, including dimensions, pixel error, and crossed-corner rejection. Native validation requires a C++ toolchain. The current Windows host lacks one, so native tests must run on the hosted Mac before this branch is merged. Browser release compilation and static analysis can still run on Windows.

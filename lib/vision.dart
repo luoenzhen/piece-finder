@@ -41,9 +41,12 @@ img.Image decodePhoto(Uint8List bytes, {int maxSide = 1600}) {
 Uint8List normalizePhoto(Uint8List bytes) =>
     Uint8List.fromList(img.encodeJpg(decodePhoto(bytes), quality: 92));
 
-/// Solves a projective mapping from the output rectangle into the photo.
-/// Sampling inverse coordinates avoids holes in the rectified reference.
-Uint8List rectifyPhoto(Uint8List bytes, List<ImagePoint> corners) {
+/// Shared corner validation and output sizing for both calibration backends.
+(int, int) calibrationDimensions(
+  List<ImagePoint> corners,
+  int imageWidth,
+  int imageHeight,
+) {
   if (corners.length != 4) {
     throw const VisionException('Select all four corners.');
   }
@@ -56,10 +59,9 @@ Uint8List rectifyPhoto(Uint8List bytes, List<ImagePoint> corners) {
       );
     }
   }
-  final source = decodePhoto(bytes);
   double distance(ImagePoint a, ImagePoint b) => math.sqrt(
-    math.pow((a.x - b.x) * source.width, 2) +
-        math.pow((a.y - b.y) * source.height, 2),
+    math.pow((a.x - b.x) * imageWidth, 2) +
+        math.pow((a.y - b.y) * imageHeight, 2),
   );
   final width =
       ((distance(corners[0], corners[1]) + distance(corners[3], corners[2])) /
@@ -71,6 +73,17 @@ Uint8List rectifyPhoto(Uint8List bytes, List<ImagePoint> corners) {
               2)
           .round()
           .clamp(32, 1600);
+  return (width, height);
+}
+
+/// Dart reference implementation, also used by the browser build.
+Uint8List rectifyPhoto(Uint8List bytes, List<ImagePoint> corners) {
+  final source = decodePhoto(bytes);
+  final (width, height) = calibrationDimensions(
+    corners,
+    source.width,
+    source.height,
+  );
   const square = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)];
   final equations = <List<double>>[];
   for (var i = 0; i < 4; i++) {

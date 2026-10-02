@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'main.dart';
+import 'calibration.dart' as calibration;
 import 'models.dart';
 import 'repository.dart';
 import 'vision.dart';
@@ -106,7 +107,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   static Uint8List _rectify((Uint8List, List<ImagePoint>) args) =>
-      rectifyPhoto(args.$1, args.$2);
+      calibration.rectifyPhoto(args.$1, args.$2);
 
   Widget _buildCrop() => LayoutBuilder(
     builder: (context, constraints) {

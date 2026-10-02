@@ -42,6 +42,7 @@ dependencies:
   sqflite: ^2.4.4
   sqflite_common_ffi_web: ^1.2.0
   sqflite_common: ^2.5.13
+  dartcv4: 2.3.1
 
 dev_dependencies:
   integration_test:
@@ -98,3 +99,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+hooks:
+  user_defines:
+    dartcv4:
+      include_modules:
+        - imgproc
+        - imgcodecs
+      ios:
+        deployment_target: '15.0'
