@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,11 @@ import 'fixtures.dart';
 import 'widget_test.dart' show UnusedDatabase;
 
 class PlacementRepository extends PuzzleRepository {
-  PlacementRepository() : super(UnusedDatabase(), Directory.systemTemp);
+  PlacementRepository(this.bytes)
+    : super(UnusedDatabase(), Directory.systemTemp.path);
+  final Uint8List bytes;
+  @override
+  Future<Uint8List> readReference(Puzzle puzzle) async => bytes;
   final cells = <int>{};
   @override
   Future<void> setPlaced(Puzzle puzzle, int cell, bool placed) async {
@@ -37,7 +42,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final repository = PlacementRepository();
+    final repository = PlacementRepository(png(referenceFixture()));
     final puzzle = Puzzle(
       id: 'test',
       name: 'Test puzzle',
@@ -61,7 +66,7 @@ void main() {
     );
     await tester.runAsync(() async {
       await precacheImage(
-        FileImage(reference),
+        MemoryImage(repository.bytes),
         tester.element(find.byType(BoardScreen)),
       );
     });

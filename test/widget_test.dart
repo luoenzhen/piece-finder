@@ -16,7 +16,7 @@ class UnusedDatabase implements Database {
 }
 
 class EmptyRepository extends PuzzleRepository {
-  EmptyRepository() : super(UnusedDatabase(), Directory.systemTemp);
+  EmptyRepository() : super(UnusedDatabase(), Directory.systemTemp.path);
   @override
   Future<List<Puzzle>> puzzles() async => [];
   @override

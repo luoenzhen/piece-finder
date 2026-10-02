@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +8,7 @@ import 'capture.dart';
 import 'main.dart';
 import 'models.dart';
 import 'repository.dart';
+import 'reference_image.dart';
 import 'setup.dart';
 import 'vision.dart';
 
@@ -157,7 +156,7 @@ class _DashboardState extends State<Dashboard> {
     setState(() => _busy = true);
     ScanResult? result;
     try {
-      final reference = await File(puzzle.imagePath).readAsBytes();
+      final reference = await widget.repository.readReference(puzzle);
       final matched = await compute(_match, (
         reference,
         bytes,
@@ -209,6 +208,7 @@ class _DashboardState extends State<Dashboard> {
                 borderRadius: BorderRadius.circular(20),
                 child: BoardImage(
                   puzzle: puzzle,
+                  repository: widget.repository,
                   candidates: result.candidates,
                 ),
               ),
@@ -503,14 +503,11 @@ class _DashboardState extends State<Dashboard> {
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(24),
                             ),
-                            child: Image.file(
-                              File(puzzle.imagePath),
+                            child: ReferenceImage(
+                              puzzle: puzzle,
+                              repository: widget.repository,
                               height: 180,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => const SizedBox(
-                                height: 180,
-                                child: Icon(Icons.broken_image_outlined),
-                              ),
                             ),
                           ),
                         ),

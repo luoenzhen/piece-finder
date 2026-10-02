@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'main.dart';
 import 'models.dart';
 import 'repository.dart';
+import 'reference_image.dart';
 
 class BoardScreen extends StatefulWidget {
   const BoardScreen({
@@ -155,6 +154,7 @@ class _BoardScreenState extends State<BoardScreen> {
                             child: BoardImage(
                               key: _boardKey,
                               puzzle: widget.puzzle,
+                              repository: widget.repository,
                               candidates: widget.candidates,
                               selected: _selected,
                               grid: _grid,
@@ -228,12 +228,14 @@ class BoardImage extends StatelessWidget {
   const BoardImage({
     super.key,
     required this.puzzle,
+    required this.repository,
     this.candidates = const [],
     this.selected = 0,
     this.grid = false,
     this.placed = const {},
   });
   final Puzzle puzzle;
+  final PuzzleRepository repository;
   final List<Candidate> candidates;
   final int selected;
   final bool grid;
@@ -241,14 +243,7 @@ class BoardImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      Image.file(
-        File(puzzle.imagePath),
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => const SizedBox(
-          height: 180,
-          child: Center(child: Text('Reference image unavailable')),
-        ),
-      ),
+      ReferenceImage(puzzle: puzzle, repository: repository),
       Positioned.fill(
         child: IgnorePointer(
           child: CustomPaint(

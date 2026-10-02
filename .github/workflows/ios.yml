@@ -10,6 +10,22 @@ permissions:
   contents: read
 
 jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Flutter SDK
+        run: |
+          git clone --depth 1 --branch 3.47.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build web --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PieceFinder-browser
+          path: build/web
+          if-no-files-found: error
   ios:
     runs-on: macos-15
     timeout-minutes: 45

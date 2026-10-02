@@ -8,7 +8,7 @@ Implemented: camera/gallery capture, four-corner perspective calibration, editab
 
 The matcher is an experimental Dart reference implementation. It requires one piece on contrasting paper, viewed straight down with its body axes aligned to the camera frame. Similarity scores are not calibrated probabilities. Synthetic tests do not establish real-puzzle accuracy.
 
-**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, corner loupe, barcode catalog lookup, real subscriptions, synchronization semantics, supported glare processing, real-photo accuracy/performance benchmarks, and verified operation on a physical iPhone. See [development gates](docs/DEVELOPMENT.md).
+**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, corner loupe, barcode catalog lookup, real subscriptions, synchronization semantics, supported glare processing, and real-photo accuracy/performance benchmarks. The user has installed the development IPA through AltStore on an iPhone; full device acceptance testing remains pending. See [development gates](docs/DEVELOPMENT.md).
 
 ## Develop and test
 
@@ -32,9 +32,28 @@ Tests cover known piece placement and rotations, tab/socket segmentation, low-te
 
 ## iPhone builds without a Mac
 
+Version 0.1.1 fixes artwork corner dragging: each corner has a full 48-pixel touch target inside the editor, and dragging uses stable pointer coordinates. The regression test covers all four corners, including edge touches and direction changes.
+
 The [GitHub Actions workflow](.github/workflows/ios.yml) runs checks on a hosted Mac, builds a simulator app and an unsigned arm64 release, then packages `PieceFinder-unsigned.ipa` for personal signing. Successful Windows tests do not prove that workflow passes.
 
 Follow [docs/IPHONE.md](docs/IPHONE.md) for the Windows/AltStore Classic personal-testing path and the separate Apple Developer/TestFlight path. An unsigned IPA is not directly installable. No Apple signing credentials belong in this repository.
+
+## Test in your browser
+
+On this Windows project, run:
+
+```powershell
+cd D:\projects\test\piece-finder
+.\scripts\run_browser.ps1
+```
+
+Open **http://localhost:8080** in Chrome or Edge when the server says it is ready. Keep the terminal open. Press Ctrl+C to stop it. On another computer with Flutter 3.47.5 installed, run `flutter pub get` then `flutter run -d chrome --web-port 8080` from the project root.
+
+Try **New puzzle → Choose a photo**, drag each numbered corner, enter a name, confirm rows/columns, and create the puzzle. Reload the browser and confirm the puzzle and photo are still present. **Find a piece → Import photo** lets you test matching without a webcam. Camera access requires permission and either localhost or HTTPS.
+
+Browser photos and puzzle state live in that browser's local IndexedDB storage, separately from your iPhone. Use the same URL and port to revisit them; clearing site data removes them. The web matcher currently runs on the browser's main thread and can briefly pause the interface for larger puzzles. Use JPEG/PNG images; camera format support differs by browser.
+
+GitHub Actions also produces a `PieceFinder-browser` artifact. Its extracted contents must be served by an HTTP server; opening `index.html` directly as a file will not work. The workflow builds this artifact but does not publish a public website.
 
 ## Project layout
 

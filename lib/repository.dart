@@ -1,31 +1,24 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 import 'models.dart';
+import 'storage.dart';
 
 class PuzzleRepository {
-  PuzzleRepository(this.db, this.directory);
+  PuzzleRepository(this.db, String directory)
+    : storage = PuzzleStorage(db, directory);
   final Database db;
-  final Directory directory;
+  final PuzzleStorage storage;
 
   static Future<PuzzleRepository> open() async {
-    final directory = Directory(
-      p.join((await getApplicationSupportDirectory()).path, 'puzzles'),
-    );
-    await directory.create(recursive: true);
-    final db = await openDatabase(
-      p.join(directory.path, 'piecefinder.db'),
-      version: 1,
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-      onCreate: createSchema,
-    );
-    return PuzzleRepository(db, directory);
+    final storage = await PuzzleStorage.open(createSchema);
+    return PuzzleRepository(storage.db, storage.directory);
   }
+
+  Future<Uint8List> readReference(Puzzle puzzle) =>
+      storage.read(puzzle.imagePath);
 
   static Future<void> createSchema(Database db, int version) async {
     await db.execute(
@@ -50,7 +43,7 @@ class PuzzleRepository {
           (row) => Puzzle(
             id: row['id'] as String,
             name: row['name'] as String,
-            imagePath: p.join(directory.path, row['image'] as String),
+            imagePath: storage.resolve(row['image'] as String),
             rows: row['rows'] as int,
             columns: row['columns'] as int,
             createdAt: DateTime.parse(row['created'] as String),
@@ -79,8 +72,8 @@ class PuzzleRepository {
     final now = DateTime.now().toUtc();
     final id = now.microsecondsSinceEpoch.toString();
     final filename = '$id.jpg';
-    final file = File(p.join(directory.path, filename));
-    await file.writeAsBytes(reference, flush: true);
+    final path = storage.resolve(filename);
+    await storage.write(path, reference);
     try {
       await db.insert('puzzles', {
         'id': id,
@@ -91,13 +84,13 @@ class PuzzleRepository {
         'created': now.toIso8601String(),
       });
     } catch (_) {
-      await file.delete();
+      await storage.delete(path);
       rethrow;
     }
     return Puzzle(
       id: id,
       name: name.trim(),
-      imagePath: file.path,
+      imagePath: path,
       rows: rows,
       columns: columns,
       createdAt: now,
@@ -195,7 +188,6 @@ class PuzzleRepository {
 
   Future<void> delete(Puzzle puzzle) async {
     await db.delete('puzzles', where: 'id = ?', whereArgs: [puzzle.id]);
-    final file = File(puzzle.imagePath);
-    if (await file.exists()) await file.delete();
+    await storage.delete(puzzle.imagePath);
   }
 }

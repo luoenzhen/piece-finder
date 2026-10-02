@@ -24,4 +24,4 @@ The sequence is incremental; no intermediate gate redefines completion.
 
 ## Source of truth
 
-Use current source and test output for implementation status. The PRD is the scope authority. Device acceptance requires real photographs from 500/1000-piece puzzles, labels, measured timing and memory, and physical iPhone testing. None have been supplied yet.
+Use current source and test output for implementation status. The PRD is the scope authority. Device acceptance requires real photographs from 500/1000-piece puzzles, labels, measured timing and memory, and physical iPhone testing. The user confirmed installation through AltStore and reported artwork corner dragging failed. Version 0.1.1 addresses that report with a regression test; confirmation on the physical iPhone is still needed. Labeled photographs and device benchmarks have not been supplied.

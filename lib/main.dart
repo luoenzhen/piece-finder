@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'dashboard.dart';
@@ -61,6 +62,17 @@ class _PieceFinderAppState extends State<PieceFinderApp> {
     title: 'PieceFinder',
     debugShowCheckedModeBanner: false,
     theme: pieceFinderTheme(),
+    builder: kIsWeb
+        ? (context, child) => ColoredBox(
+            color: paper,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: child,
+              ),
+            ),
+          )
+        : null,
     home: FutureBuilder<PuzzleRepository>(
       future: _repository,
       builder: (context, snapshot) {

@@ -28,6 +28,9 @@ class _SetupScreenState extends State<SetupScreen> {
   double _ratio = 1.5;
   int _count = 500;
   bool _saving = false;
+  bool _dragging = false;
+  Offset? _dragOrigin;
+  ImagePoint? _cornerOrigin;
   String? _error;
   @override
   void initState() {
@@ -103,6 +106,85 @@ class _SetupScreenState extends State<SetupScreen> {
 
   static Uint8List _rectify((Uint8List, List<ImagePoint>) args) =>
       rectifyPhoto(args.$1, args.$2);
+
+  Widget _buildCrop() => LayoutBuilder(
+    builder: (context, constraints) {
+      const inset = 24.0;
+      final width = constraints.maxWidth - inset * 2;
+      final height = width / _ratio;
+      return SizedBox(
+        height: height + inset * 2,
+        child: Stack(
+          children: [
+            Positioned(
+              left: inset,
+              top: inset,
+              width: width,
+              height: height,
+              child: Image.memory(_photo!, fit: BoxFit.fill),
+            ),
+            Positioned(
+              left: inset,
+              top: inset,
+              width: width,
+              height: height,
+              child: IgnorePointer(
+                child: CustomPaint(painter: CropPainter(_corners)),
+              ),
+            ),
+            for (var i = 0; i < 4; i++)
+              Positioned(
+                left: inset + _corners[i].x * width - 24,
+                top: inset + _corners[i].y * height - 24,
+                child: Semantics(
+                  label: 'Artwork corner ${i + 1}',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onPanDown: (details) {
+                      _dragOrigin = details.globalPosition;
+                      _cornerOrigin = _corners[i];
+                    },
+                    onPanStart: (_) => setState(() => _dragging = true),
+                    onPanUpdate: (details) {
+                      final delta = details.globalPosition - _dragOrigin!;
+                      setState(
+                        () => _corners[i] = (
+                          x: (_cornerOrigin!.x + delta.dx / width).clamp(0, 1),
+                          y: (_cornerOrigin!.y + delta.dy / height).clamp(0, 1),
+                        ),
+                      );
+                    },
+                    onPanEnd: (_) => setState(() => _dragging = false),
+                    onPanCancel: () => setState(() => _dragging = false),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: ink, width: 3),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${i + 1}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    },
+  );
   @override
   void dispose() {
     _name.dispose();
@@ -118,6 +200,7 @@ class _SetupScreenState extends State<SetupScreen> {
       child: AbsorbPointer(
         absorbing: _saving,
         child: ListView(
+          physics: _dragging ? const NeverScrollableScrollPhysics() : null,
           padding: const EdgeInsets.all(24),
           children: [
             const Text(
@@ -137,80 +220,7 @@ class _SetupScreenState extends State<SetupScreen> {
             const SizedBox(height: 24),
             if (_photo == null && _error == null)
               const Center(child: CircularProgressIndicator()),
-            if (_photo != null)
-              AspectRatio(
-                aspectRatio: _ratio,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final size = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.memory(_photo!, fit: BoxFit.fill),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: CustomPaint(painter: CropPainter(_corners)),
-                          ),
-                        ),
-                        for (var i = 0; i < 4; i++)
-                          Positioned(
-                            left: _corners[i].x * size.width - 22,
-                            top: _corners[i].y * size.height - 22,
-                            child: Semantics(
-                              label: 'Artwork corner ${i + 1}',
-                              child: GestureDetector(
-                                onPanUpdate: (details) => setState(
-                                  () => _corners[i] = (
-                                    x:
-                                        (_corners[i].x +
-                                                details.delta.dx / size.width)
-                                            .clamp(0, 1),
-                                    y:
-                                        (_corners[i].y +
-                                                details.delta.dy / size.height)
-                                            .clamp(0, 1),
-                                  ),
-                                ),
-                                child: SizedBox(
-                                  width: 44,
-                                  height: 44,
-                                  child: Center(
-                                    child: Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: ink,
-                                          width: 3,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '${i + 1}',
-                                          style: const TextStyle(fontSize: 10),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
+            if (_photo != null) _buildCrop(),
             const SizedBox(height: 28),
             TextField(
               controller: _name,

@@ -30,7 +30,7 @@ void main() {
         onCreate: PuzzleRepository.createSchema,
       ),
     );
-    repository = PuzzleRepository(database, directory);
+    repository = PuzzleRepository(database, directory.path);
     puzzle = await repository.create(
       name: 'Test puzzle',
       reference: png(referenceFixture()),
@@ -54,7 +54,7 @@ void main() {
       database = await databaseFactoryFfi.openDatabase(
         '${directory.path}/test.db',
       );
-      repository = PuzzleRepository(database, directory);
+      repository = PuzzleRepository(database, directory.path);
       final saved = (await repository.puzzles()).single;
       expect(saved.name, puzzle.name);
       expect(saved.placed, {15});
