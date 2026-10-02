@@ -49,7 +49,28 @@ void main() {
       await tester.pump();
       await gesture.moveBy(const Offset(20, 15));
       await tester.pump();
+      final magnifier = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label == 'Corner magnifier, 2 times zoom',
+      );
+      expect(magnifier, findsOneWidget);
+      final zoomedImage = find.descendant(
+        of: magnifier,
+        matching: find.byType(Image),
+      );
+      expect(tester.getSize(zoomedImage), imageSize * 2);
+      final magnifiedCorner =
+          tester.getTopLeft(zoomedImage) +
+          Offset(
+            painter().corners.first.x * imageSize.width * 2,
+            painter().corners.first.y * imageSize.height * 2,
+          );
+      expect(magnifiedCorner.dx, closeTo(tester.getCenter(magnifier).dx, .001));
+      expect(magnifiedCorner.dy, closeTo(tester.getCenter(magnifier).dy, .001));
       await gesture.up();
+      await tester.pump();
+      expect(magnifier, findsNothing);
       expect(
         painter().corners.first.x,
         closeTo(before.x + 55 / imageSize.width, .001),

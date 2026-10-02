@@ -29,6 +29,7 @@ class _SetupScreenState extends State<SetupScreen> {
   int _count = 500;
   bool _saving = false;
   bool _dragging = false;
+  int? _activeCorner;
   Offset? _dragOrigin;
   ImagePoint? _cornerOrigin;
   String? _error;
@@ -144,7 +145,10 @@ class _SetupScreenState extends State<SetupScreen> {
                       _dragOrigin = details.globalPosition;
                       _cornerOrigin = _corners[i];
                     },
-                    onPanStart: (_) => setState(() => _dragging = true),
+                    onPanStart: (_) => setState(() {
+                      _dragging = true;
+                      _activeCorner = i;
+                    }),
                     onPanUpdate: (details) {
                       final delta = details.globalPosition - _dragOrigin!;
                       setState(
@@ -154,8 +158,8 @@ class _SetupScreenState extends State<SetupScreen> {
                         ),
                       );
                     },
-                    onPanEnd: (_) => setState(() => _dragging = false),
-                    onPanCancel: () => setState(() => _dragging = false),
+                    onPanEnd: (_) => _endDrag(),
+                    onPanCancel: _endDrag,
                     child: SizedBox(
                       width: 48,
                       height: 48,
@@ -180,11 +184,67 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                 ),
               ),
+            if (_activeCorner != null)
+              Positioned(
+                top: 0,
+                left: _corners[_activeCorner!].x >= .5 ? 0 : null,
+                right: _corners[_activeCorner!].x < .5 ? 0 : null,
+                child: IgnorePointer(
+                  child: Semantics(
+                    label: 'Corner magnifier, 2 times zoom',
+                    child: Container(
+                      width: 112,
+                      height: 112,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: ink, width: 3),
+                        boxShadow: const [
+                          BoxShadow(blurRadius: 8, color: Colors.black26),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: ColoredBox(
+                          color: paper,
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left:
+                                    53 - _corners[_activeCorner!].x * width * 2,
+                                top:
+                                    53 -
+                                    _corners[_activeCorner!].y * height * 2,
+                                width: width * 2,
+                                height: height * 2,
+                                child: Image.memory(_photo!, fit: BoxFit.fill),
+                              ),
+                              const Center(
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 24,
+                                  shadows: [
+                                    Shadow(color: Colors.black, blurRadius: 3),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       );
     },
   );
+  void _endDrag() => setState(() {
+    _dragging = false;
+    _activeCorner = null;
+  });
+
   @override
   void dispose() {
     _name.dispose();

@@ -4,11 +4,11 @@ A native Flutter app for finding jigsaw pieces against a photographed puzzle ref
 
 ## Current development build
 
-Implemented: camera/gallery capture, four-corner perspective calibration, editable grid dimensions, SQLite puzzle library, offline CPU reference matching across four rotations, three candidate results with similarity scores, scan history, unlimited scanning, and a pan/zoom board with persistent placements and undo.
+Implemented: camera/gallery capture, four-corner perspective calibration with a 2× magnifier, editable grid dimensions, SQLite puzzle library, offline CPU reference matching across four rotations, three candidate results with similarity scores, scan history, unlimited scanning, and a pan/zoom board with persistent placements and undo.
 
 The matcher is an experimental Dart reference implementation. It requires one piece on contrasting paper, viewed straight down with its body axes aligned to the camera frame. Similarity scores are not calibrated probabilities. Synthetic tests do not establish real-puzzle accuracy.
 
-**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, corner loupe, barcode catalog lookup, synchronization semantics, supported glare processing, and real-photo accuracy/performance benchmarks. The user has installed the development IPA through AltStore on an iPhone; full device acceptance testing remains pending. See [development gates](docs/DEVELOPMENT.md).
+**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, barcode catalog lookup, synchronization semantics, supported glare processing, and real-photo accuracy/performance benchmarks. The user has installed the development IPA through AltStore on an iPhone; full device acceptance testing remains pending. See [development gates](docs/DEVELOPMENT.md).
 
 ## Develop and test
 
