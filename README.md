@@ -43,7 +43,7 @@ Follow [docs/IPHONE.md](docs/IPHONE.md) for the Windows/AltStore Classic persona
 On this Windows project, run:
 
 ```powershell
-cd \piece-finder
+cd piece-finder
 .\scripts\run_browser.ps1
 ```
 
