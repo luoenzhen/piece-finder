@@ -19,9 +19,6 @@ class EmptyRepository extends PuzzleRepository {
   EmptyRepository() : super(UnusedDatabase(), Directory.systemTemp.path);
   @override
   Future<List<Puzzle>> puzzles() async => [];
-  @override
-  Future<ScanQuota> quota({DateTime? now}) async =>
-      ScanQuota(used: 0, startedAt: DateTime.now().toUtc());
 }
 
 void main() {
@@ -57,7 +54,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Every piece\nhas a place.'), findsOneWidget);
-    expect(find.text('5 free scans'), findsOneWidget);
+    expect(find.text('Unlimited scans'), findsOneWidget);
     expect(tester.takeException(), isNull);
     final render =
         boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;

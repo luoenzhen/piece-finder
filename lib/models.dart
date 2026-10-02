@@ -89,15 +89,3 @@ class ScanResult {
       (candidates.length > 1 &&
           candidates.first.similarity - candidates[1].similarity < .06);
 }
-
-class ScanQuota {
-  const ScanQuota({required this.used, required this.startedAt});
-  static const limit = 5;
-  final int used;
-  final DateTime startedAt;
-  bool expired(DateTime now) =>
-      now.difference(startedAt) >= const Duration(hours: 24);
-  int remaining(DateTime now) =>
-      expired(now) ? limit : math.max(0, limit - used);
-  DateTime get resetsAt => startedAt.add(const Duration(hours: 24));
-}

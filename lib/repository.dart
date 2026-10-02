@@ -30,9 +30,6 @@ class PuzzleRepository {
     await db.execute(
       'CREATE TABLE scans (id INTEGER PRIMARY KEY, puzzle_id TEXT NOT NULL REFERENCES puzzles(id) ON DELETE CASCADE, created TEXT NOT NULL, candidates TEXT NOT NULL, low_texture INTEGER NOT NULL, elapsed_ms INTEGER NOT NULL)',
     );
-    await db.execute(
-      'CREATE TABLE quota (id INTEGER PRIMARY KEY CHECK(id = 1), started TEXT NOT NULL, used INTEGER NOT NULL)',
-    );
   }
 
   Future<List<Puzzle>> puzzles() async {
@@ -115,51 +112,19 @@ class PuzzleRepository {
     }
   }
 
-  Future<ScanQuota> quota({DateTime? now}) async {
-    final records = await db.query('quota');
-    return records.isEmpty
-        ? ScanQuota(used: 0, startedAt: now ?? DateTime.now().toUtc())
-        : ScanQuota(
-            used: records.first['used'] as int,
-            startedAt: DateTime.parse(records.first['started'] as String),
-          );
-  }
-
-  /// Consume quota only after a successful scan. One transaction prevents races.
   Future<void> saveScan(
     Puzzle puzzle,
     ScanResult result, {
     DateTime? now,
   }) async {
-    final instant = (now ?? DateTime.now()).toUtc();
-    await db.transaction((tx) async {
-      final records = await tx.query('quota');
-      final current = records.isEmpty
-          ? ScanQuota(used: 0, startedAt: instant)
-          : ScanQuota(
-              used: records.first['used'] as int,
-              startedAt: DateTime.parse(records.first['started'] as String),
-            );
-      if (current.remaining(instant) == 0) {
-        throw StateError(
-          'All five free scans have been used. Your allowance resets 24 hours after the first scan.',
-        );
-      }
-      await tx.insert('scans', {
-        'puzzle_id': puzzle.id,
-        'created': instant.toIso8601String(),
-        'candidates': jsonEncode(
-          result.candidates.map((c) => c.toJson()).toList(),
-        ),
-        'low_texture': result.lowTexture ? 1 : 0,
-        'elapsed_ms': result.elapsedMs,
-      });
-      await tx.insert('quota', {
-        'id': 1,
-        'started': (current.expired(instant) ? instant : current.startedAt)
-            .toIso8601String(),
-        'used': current.expired(instant) ? 1 : current.used + 1,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('scans', {
+      'puzzle_id': puzzle.id,
+      'created': (now ?? DateTime.now()).toUtc().toIso8601String(),
+      'candidates': jsonEncode(
+        result.candidates.map((c) => c.toJson()).toList(),
+      ),
+      'low_texture': result.lowTexture ? 1 : 0,
+      'elapsed_ms': result.elapsedMs,
     });
   }
 

@@ -4,11 +4,11 @@ A native Flutter app for finding jigsaw pieces against a photographed puzzle ref
 
 ## Current development build
 
-Implemented: camera/gallery capture, four-corner perspective calibration, editable grid dimensions, SQLite puzzle library, offline CPU reference matching across four rotations, three candidate results with similarity scores, scan history, rolling 24-hour quota, and a pan/zoom board with persistent placements and undo.
+Implemented: camera/gallery capture, four-corner perspective calibration, editable grid dimensions, SQLite puzzle library, offline CPU reference matching across four rotations, three candidate results with similarity scores, scan history, unlimited scanning, and a pan/zoom board with persistent placements and undo.
 
 The matcher is an experimental Dart reference implementation. It requires one piece on contrasting paper, viewed straight down with its body axes aligned to the camera frame. Similarity scores are not calibrated probabilities. Synthetic tests do not establish real-puzzle accuracy.
 
-**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, corner loupe, barcode catalog lookup, real subscriptions, synchronization semantics, supported glare processing, and real-photo accuracy/performance benchmarks. The user has installed the development IPA through AltStore on an iPhone; full device acceptance testing remains pending. See [development gates](docs/DEVELOPMENT.md).
+**Not yet complete:** native OpenCV/C++/FFI engine, live contour/box detection and automatic capture, arbitrary piece deskew, connector classification/pruning, tray edge sorting, corner loupe, barcode catalog lookup, synchronization semantics, supported glare processing, and real-photo accuracy/performance benchmarks. The user has installed the development IPA through AltStore on an iPhone; full device acceptance testing remains pending. See [development gates](docs/DEVELOPMENT.md).
 
 ## Develop and test
 
@@ -28,11 +28,11 @@ $env:PUB_CACHE = Join-Path $PWD '.tooling\pub-cache'
 .\.tooling\flutter\bin\flutter.bat test --reporter expanded
 ```
 
-Tests cover known piece placement and rotations, tab/socket segmentation, low-texture ambiguity, invalid inputs, perspective calibration, SQLite reopening/deletion, quota boundaries, compact-screen layout, and candidate placement/undo. Synthetic 500/1000-piece timing output is written to `.artifacts/reference-benchmark.json`; dashboard rendering is written to `.artifacts/dashboard.png`. Both are host-test artifacts, not iPhone validation.
+Tests cover known piece placement and rotations, tab/socket segmentation, low-texture ambiguity, invalid inputs, perspective calibration, SQLite reopening/deletion, unlimited scans with legacy databases, compact-screen layout, and candidate placement/undo. Synthetic 500/1000-piece timing output is written to `.artifacts/reference-benchmark.json`; dashboard rendering is written to `.artifacts/dashboard.png`. Both are host-test artifacts, not iPhone validation.
 
 ## iPhone builds without a Mac
 
-Version 0.1.1 fixes artwork corner dragging: each corner has a full 48-pixel touch target inside the editor, and dragging uses stable pointer coordinates. The regression test covers all four corners, including edge touches and direction changes.
+Version 0.1.2 includes unlimited scans and fixes artwork corner dragging: each corner has a full 48-pixel touch target inside the editor, and dragging uses stable pointer coordinates. The regression test covers all four corners, including edge touches and direction changes.
 
 The [GitHub Actions workflow](.github/workflows/ios.yml) runs checks on a hosted Mac, builds a simulator app and an unsigned arm64 release, then packages `PieceFinder-unsigned.ipa` for personal signing. Successful Windows tests do not prove that workflow passes.
 
@@ -58,8 +58,8 @@ GitHub Actions also produces a `PieceFinder-browser` artifact. Its extracted con
 ## Project layout
 
 - `lib/vision.dart`: CPU algorithm prototype and perspective rectification.
-- `lib/repository.dart`: SQLite projects, placements, scan history and atomic quota updates.
-- `lib/models.dart`: puzzle, grid, candidate and quota data.
+- `lib/repository.dart`: SQLite projects, placements, scan history.
+- `lib/models.dart`: puzzle, grid and candidate data.
 - `lib/capture.dart`, `setup.dart`, `dashboard.dart`, `board.dart`: mobile UI.
 - `ios/`, `android/`: generated native projects plus permission declarations.
 - `test/`: deterministic image, persistence and UI checks; test fonts retain their license notices.

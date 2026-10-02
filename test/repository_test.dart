@@ -63,40 +63,25 @@ void main() {
       expect((await repository.puzzles()).single.placed, isEmpty);
     },
   );
-  test(
-    'quota and scan history update atomically and reset after 24 hours',
-    () async {
-      final now = DateTime.utc(2026, 10, 1, 12);
-      for (var i = 0; i < 5; i++) {
-        await repository.saveScan(puzzle, result, now: now);
-      }
-      await expectLater(
-        repository.saveScan(puzzle, result, now: now),
-        throwsStateError,
-      );
-      expect((await repository.history(puzzle)).length, 5);
-      expect((await repository.quota()).remaining(now), 0);
-      await repository.saveScan(
-        puzzle,
-        result,
-        now: now.add(const Duration(hours: 24)),
-      );
-      expect(
-        (await repository.quota()).remaining(
-          now.add(const Duration(hours: 24)),
-        ),
-        4,
-      );
-      expect(
-        (await repository.history(puzzle))
-            .first
-            .candidates
-            .single
-            .clockwiseTurns,
-        1,
-      );
-    },
-  );
+  test('scans remain unlimited with an exhausted legacy quota', () async {
+    final now = DateTime.utc(2026, 10, 2, 12);
+    await database.execute(
+      'CREATE TABLE quota (id INTEGER PRIMARY KEY, started TEXT NOT NULL, used INTEGER NOT NULL)',
+    );
+    await database.insert('quota', {
+      'id': 1,
+      'started': now.toIso8601String(),
+      'used': 5,
+    });
+    for (var i = 0; i < 20; i++) {
+      await repository.saveScan(puzzle, result, now: now);
+    }
+    expect((await repository.history(puzzle)).length, 20);
+    expect(
+      (await repository.history(puzzle)).first.candidates.single.clockwiseTurns,
+      1,
+    );
+  });
   test('deletion removes associated scans, placements and reference', () async {
     await repository.setPlaced(puzzle, 0, true);
     await repository.saveScan(puzzle, result);

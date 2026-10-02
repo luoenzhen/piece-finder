@@ -15,13 +15,6 @@ void main() {
       }
     },
   );
-  test('quota resets after exactly 24 hours, never on clock rollback', () {
-    final now = DateTime.utc(2026, 10, 1, 12);
-    final quota = ScanQuota(used: 5, startedAt: now);
-    expect(quota.remaining(now.add(const Duration(hours: 23, minutes: 59))), 0);
-    expect(quota.remaining(now.add(const Duration(hours: 24))), 5);
-    expect(quota.remaining(now.subtract(const Duration(days: 1))), 0);
-  });
   test('similar top scores are ambiguous even with high similarity', () {
     const result = ScanResult(
       candidates: [

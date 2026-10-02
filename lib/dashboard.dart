@@ -21,7 +21,6 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   List<Puzzle> _puzzles = [];
-  ScanQuota? _quota;
   bool _loading = true;
   bool _busy = false;
   String? _error;
@@ -34,11 +33,9 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _reload() async {
     try {
       final puzzles = await widget.repository.puzzles();
-      final quota = await widget.repository.quota();
       if (mounted) {
         setState(() {
           _puzzles = puzzles;
-          _quota = quota;
           _loading = false;
           _error = null;
         });
@@ -139,15 +136,6 @@ class _DashboardState extends State<Dashboard> {
   );
   Future<void> _scan(Puzzle puzzle) async {
     if (_busy) return;
-    final quota = await widget.repository.quota();
-    if (!mounted) return;
-    if (quota.remaining(DateTime.now().toUtc()) == 0) {
-      showError(
-        context,
-        'Five free scans used. Available again at ${quota.resetsAt.toLocal()}.',
-      );
-      return;
-    }
     final bytes = await Navigator.push<Uint8List>(
       context,
       MaterialPageRoute(builder: (_) => const CaptureScreen()),
@@ -351,7 +339,7 @@ class _DashboardState extends State<Dashboard> {
             ),
             SizedBox(height: 16),
             Text(
-              'Development preview · matching is experimental. Five scans per 24 hours. Pro subscriptions are not available in this build.',
+              'Development preview · matching is experimental. Unlimited scans.',
               style: TextStyle(height: 1.6),
             ),
           ],
@@ -444,11 +432,10 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                   ),
-                  if (_quota != null)
-                    Text(
-                      '${_quota!.remaining(DateTime.now().toUtc())} free scans',
-                      style: const TextStyle(color: ink, fontSize: 12),
-                    ),
+                  const Text(
+                    'Unlimited scans',
+                    style: TextStyle(color: ink, fontSize: 12),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
