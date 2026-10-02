@@ -40,6 +40,7 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze
       - run: flutter test --reporter expanded
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - name: Build iOS simulator app
         run: flutter build ios --simulator --debug
       - name: Boot an iPhone simulator
@@ -58,6 +59,15 @@ jobs:
           cp -R build/ios/iphoneos/Runner.app build/personal/Payload/
           cd build/personal
           zip -qry ../PieceFinder-unsigned.ipa Payload
+      - name: Check installed app size budget
+        run: python3 scripts/check_ipa_size.py build/PieceFinder-unsigned.ipa .artifacts/iphone-size.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iphone-size-report
+          path: .artifacts/iphone-size.json
+          include-hidden-files: true
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: PieceFinder-personal-signing
